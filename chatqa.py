@@ -32,15 +32,15 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 def processdata():
 
-    data_dir = '/content/gdrive/My Drive/nlpqa3/data'
+    data_dir = './data'
     file_name = 'nonghangzhidao.csv'
     file_name2 = 'nonghangzhidao3.txt'
     file_path_name = os.path.join(data_dir, file_name)
     file_path_name2 = os.path.join(data_dir, file_name2)
-    out = '/content/gdrive/My Drive/nlpqa3/data/sim.txt'
-    out2 = '/content/gdrive/My Drive/nlpqa3/data/train.txt'
-    out3 = '/content/gdrive/My Drive/nlpqa3/data/test.txt'
-    out4 = '/content/gdrive/My Drive/nlpqa3/data/dev.txt'
+    out = './data/sim.txt'
+    out2 = './data/train.txt'
+    out3 = './data/test.txt'
+    out4 = './data/dev.txt'
 
     q_list, a_list = [], []
     maxlen = 0
@@ -175,9 +175,6 @@ def semantic_match(model, tokenizer, question, attribute_list, max_seq_length):
             
             logits = outputs[0]
 
-            #logits = logits.sigmoid(dim = -1)
-            #logits = logits.softmax(dim = -1)
-
             if all_logits is None:
                 all_logits = logits.clone()
             else:
@@ -189,13 +186,14 @@ def semantic_match(model, tokenizer, question, attribute_list, max_seq_length):
     else:
         return prediction.argmax(dim = -1)
 
+
 def read_corpus_faq(seg):
     qList = []    
     qList_kw = []   # keyword in question
     aList = []
 
 
-    file_obj = codecs.open('/content/gdrive/My Drive/nlpqa3/data/train.txt', 'r', 'utf-8' ,'ignore')
+    file_obj = codecs.open('./data/train.txt', 'r', 'utf-8' ,'ignore')
     while True:
         line = file_obj.readline()
         line = line.strip().split()
@@ -208,22 +206,26 @@ def read_corpus_faq(seg):
     file_obj.close()
     return qList_kw, qList, aList
 
-    '''
-    with open('/content/gdrive/My Drive/nlpqa3/data/train.txt', "r", encoding="utf-8") as f:
-        while True:
-            line = f.readline()
-            line = line.strip().split()
-            if len(line) == 0: 
-                print(line)
-                break
-            if len(line) < 2:
-                print(line)
-            qList.append(line[0])
-            qList_kw.append(seg.cut(line[0]))
-            aList.append(line[1])
-    f.close()
+
+def read_corpus_chat(seg):
+    qList = []    
+    qList_kw = []   # keyword in question
+    aList = []
+    
+    for i in range(9):
+        fn = './data/tempo/chats' + str(i)
+        with open(fn, 'r', encoding='utf-8') as f2:
+            for lines in f2:
+                if lines.strip() == '': break 
+                line = lines.split()        # format [q, a]
+                if len(line) < 2:
+                    continue
+                qList.append(line[0])
+                qList_kw.append(seg.cut(line[0]))
+                aList.append(line[1])
+     
     return qList_kw, qList, aList
-    '''
+
 
 if __name__ == "__main__":
     # get train, dev, test data, save as '.txt'
@@ -231,23 +233,37 @@ if __name__ == "__main__":
     
     max_eps = 0.9
     min_eps = 0.2
-    sim_path = '/content/gdrive/My Drive/nlpqa3/output/data/'
-    file_path = '/content/gdrive/My Drive/nlpqa3/data/'
+    sim_path = './output/data/'
+    file_path = './data/'
     
     seg = Seg()
     seg.load_userdict(os.path.join(file_path, 'userdict'))
 
-    # read data
-    qList_kw, qList, aList = read_corpus_faq(seg)
-    
-    # initialize model
-    ss = SentenceSim(seg)
-    ss.set_sentences(qList)
-    ss.tfidf()        # tf-idf模型
-    #ss.lsi()         # lsi模型
-    #ss.lda()         # lda模型
 
     while True:
+        mode = input("金融知识faq扣1；闲聊扣2: (退出请输入：q)")
+        if mode == 'q':
+            break
+        
+        if mode == '1':
+            # read data
+            qList_kw, qList, aList = read_corpus_faq(seg)
+
+        elif mode == '2':
+            # read data
+            qList_kw, qList, aList = read_corpus_chat(seg)
+        else:
+            input("请输入正确选项！")
+            continue
+        
+        # initialize model
+        ss = SentenceSim(seg)
+        ss.set_sentences(qList)
+            
+        ss.tfidf()        # tf-idf模型
+        #ss.lsi()         # lsi模型
+        #ss.lda()         # lda模型    
+        
         q = input("请输入您的问题: (退出请输入：q)")
         if q == 'q':
             break
@@ -269,8 +285,16 @@ if __name__ == "__main__":
             print("抱歉！我不太理解您的意思...")
             continue
         
-        # recall + re-rank model
-        else:   
+        # recall + re-rank model (only for faq mode)
+        else:
+            # not use re-rank for chat mode 
+            if mode == '2': 
+                print("我的回答: {} (分数:{})".format(aList[q_topk[0][0]], q_topk[1][0]))
+                for idx, score in zip(*q_topk):
+                    if idx == 0: continue
+                    print('其他相关:\n{},  socre: {}'.format(qList[idx], score))   
+                continue
+                
             tokenizer = BertTokenizer.from_pretrained('bert-base-chinese', return_tensors='pt')
             sim_processor = sim_main.preProcessor()
             sim_model = load_sim_model(config_file=os.path.join(sim_path, 'config.json'),
