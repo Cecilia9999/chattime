@@ -83,7 +83,7 @@ def processdata():
             pos, neg = [], []
             pos.append(q)
             while True:
-                neg = random.sample(q_lista, 5)
+                neg = random.sample(q_lista, 1)
                 if pos[0] not in neg:
                     break
             res.append(pos+neg)
@@ -92,7 +92,7 @@ def processdata():
 
         with open(os.path.join(data_dir, out), "w", encoding='utf-8') as f3:
             for q in res:
-                assert len(q) == 6
+                assert len(q) == 2
                 for j in range(len(q)):
                     if j == 0:
                         f3.write(str(cnt) + '\t' + str(q[0]) + '\t' + str(q[0]) + '\t' + '1' + '\n')

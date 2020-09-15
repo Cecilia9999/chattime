@@ -20,9 +20,9 @@ QA chatbot realized by gensim and bert
 				  
 #### recall: 
 
-- 0 chatqa.py/processdata():  generate train.txt/dev.txt/test.txt for QA pairs.
+- 0 chatqa.py:	  processdata(): generate train.txt/dev.txt/test.txt for QA pairs.
 							  generate simtrain.txt/simdev.txt/simtest.txt for calc similarity among questions.
-							  (1 postive and 5 negative; label 1:pos, label 0:neg)
+							  (1 postive and 1 negative(randomly choose); label 1:pos, label 0:neg)
 								
 - 1 jiebaseg.py:  (**jieba**) cut sentences/documents as words
 
