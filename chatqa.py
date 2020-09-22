@@ -7,9 +7,7 @@ import random
 import pandas as pd
 import numpy as np
 import re
-import sys
 
-import numpy as np
 from nltk.probability import FreqDist
 import time
 import jieba
@@ -18,6 +16,7 @@ import codecs
 from jiebaseg import *
 from similar import SentenceSim
 import sim_main
+from recall import recall_topk
 
 import torch
 import torch.nn as nn
@@ -244,41 +243,32 @@ if __name__ == "__main__":
         mode = input("金融知识faq扣1；闲聊扣2: (退出请输入：q)")
         if mode == 'q':
             break
-        
-        if mode == '1':
-            # read data
-            qList_kw, qList, aList = read_corpus_faq(seg)
 
+        if mode == '1':
+            m = 'faq'
+            q = input("请输入您的问题: (退出请输入：q)")
         elif mode == '2':
-            # read data
-            qList_kw, qList, aList = read_corpus_chat(seg)
+            m = 'chat'
+            q = input("请输入您的问题: (退出请输入：q)")
         else:
             input("请输入正确选项！")
             continue
-        
-        # initialize model
-        ss = SentenceSim(seg)
-        ss.set_sentences(qList)
-            
-        ss.tfidf()        # tf-idf模型
-        #ss.lsi()         # lsi模型
-        #ss.lda()         # lda模型    
-        
-        q = input("请输入您的问题: (退出请输入：q)")
+
         if q == 'q':
             break
+        
         time1 = time.time()
         
         # q_topk: ([k_questions_index,...], [k_questions_score, ...])
         # q_topk[0][0]: get first index in all index of topk questions
-        q_topk = ss.similarity_topk(q, 5)
-        
-        # re-call via td-idf
+        q_topk, qList, aList = recall.recall_topk(q, 5, mode=m)
+
+        # td-idf
         if q_topk[1][0] > max_eps: 
             print("我的回答: {} (分数:{})".format(aList[q_topk[0][0]], q_topk[1][0]))
             for idx, score in zip(*q_topk):
                 if idx == 0: continue
-                print('其他相关:\n{},  socre: {}'.format(qList[idx], score))
+                print('其他相关问题:\n{},  socre: {}'.format(qList[idx], score))
         
         # too much noise, re-input
         elif q_topk[1][0] < min_eps: 
@@ -287,14 +277,13 @@ if __name__ == "__main__":
         
         # recall + re-rank model (only for faq mode)
         else:
-            # not use re-rank for chat mode 
-            if mode == '2': 
+            if m == 'chat':  # not use re-rank  
                 print("我的回答: {} (分数:{})".format(aList[q_topk[0][0]], q_topk[1][0]))
                 for idx, score in zip(*q_topk):
                     if idx == 0: continue
-                    print('其他相关:\n{},  socre: {}'.format(qList[idx], score))   
+                    print('其他相关问题:\n{},  socre: {}'.format(qList[idx], score))   
                 continue
-                
+
             tokenizer = BertTokenizer.from_pretrained('bert-base-chinese', return_tensors='pt')
             sim_processor = sim_main.preProcessor()
             sim_model = load_sim_model(config_file=os.path.join(sim_path, 'config.json'),
