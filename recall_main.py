@@ -15,7 +15,7 @@ def read_corpus_faq(seg):
     qList_kw = []   # keyword in question
     aList = []
 
-    file_obj = codecs.open('./data/train.txt', 'r', 'utf-8' ,'ignore')
+    file_obj = codecs.open('/content/gdrive/My Drive/nlpqa3/data/train.txt', 'r', 'utf-8' ,'ignore')
     while True:
         line = file_obj.readline()
         line = line.strip().split()
@@ -35,7 +35,7 @@ def read_corpus_chat(seg):
     aList = []
     
     for i in range(9):
-        fn = './data/tempo/chats' + str(i)
+        fn = '/content/gdrive/My Drive/nlpqa3/data/tempo/chats' + str(i)
         with open(fn, 'r', encoding='utf-8') as f2:
             for lines in f2:
                 if lines.strip() == '': break 
@@ -48,29 +48,34 @@ def read_corpus_chat(seg):
      
     return qList_kw, qList, aList
 
-# 建立倒排索引
+
+# 建立倒排索引 {关键词kw：含kw的问题的idx}
 def invert_table(qList_kw):
     table = {}
     for qIdx, qList in enumerate(qList_kw):
         for kw in qList:
-            table[kw] = table.get(kw, []) + [idx]
+            table[kw] = table.get(kw, []) + [qIdx]
     return table
+
 
 # 在倒排表中搜索关键词，返回所有包含关键词的 QA 对
 def search_invert_table(kwList, table, qList, aList):
     idxList = []
-
-    for kw in kwList:
-        if kw in table:
-            idxList.extend(table[kw])
+    for klist in kwList:
+        for kw in klist:
+            if kw in table:
+                idxList.extend(table[kw])
             
     # 去掉重复的问题idx
     idxList = list(set(idxList))
-    qRecall = [qList[i] for i in idxList]
-    aRecall = [aList[i] for i in idxList]
+    qR_List = [qList[i] for i in idxList]
+    aR_List = [aList[i] for i in idxList]
     return qR_List, aR_List
 
+
 def recall_topk(q, topk, mode='faq'):
+    seg = Seg()
+    seg.load_userdict('/content/gdrive/My Drive/nlpqa3/data/userdict')
 
     if mode == 'faq':
         qList_kw, qList, aList = read_corpus_faq(seg)
@@ -88,9 +93,9 @@ def recall_topk(q, topk, mode='faq'):
     #ss.lsi()         # lsi模型
     #ss.lda()         # lda模型
     
-    topk = ss.similarity_topk(q, 5)
+    top = ss.similarity_topk(q, topk)
     
-    return topk, qR_List, aR_List 
+    return top, qR_List, aR_List 
     
 
 if __name__ == "__main__":

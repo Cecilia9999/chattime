@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 import argparse
 from collections import Counter
 import code
@@ -38,13 +37,13 @@ def calc_acc(real_label, pred_label):
     label_acc = float((real_label == pred_label).sum()) / float(pred_label.shape[0])
     
     #
-    real_label = real_label.reshape(-1,6)
+    real_label = real_label.reshape(-1,2)
     assert real_label.shape[0] == real_label[:,0].sum()
 
     # 转成真实问题数*（2个预测概率）
-    pred_label = pred_label.reshape(-1,6)
+    pred_label = pred_label.reshape(-1,2)
 
-    # 看看对每个问题预测成2个答案的概率
+    # 看看对每个问题预测成6个答案的概率
     #pred_idx = pred_label.argmax(dim=-1)
     pred_idx = np.argmax(pred_label, axis=1).flatten()
 
@@ -137,6 +136,7 @@ def bertEncode(texts, tokenizer, max_seq_length=512, label_list=None):
 
     return features
 
+
 def load_and_cache_example(args, tokenizer, processor, data_type):
 
     doc_list = ['simtrain','simdev','simtest']
@@ -173,6 +173,7 @@ def load_and_cache_example(args, tokenizer, processor, data_type):
     dataset = TensorDataset(all_input_ids, all_attention_mask, all_token_type_ids, all_label)
 
     return dataset
+
 
 def evaluate_and_save_model(args, model, val_dataloader, epoch, best_acc):
 
@@ -252,6 +253,7 @@ def evaluate(args, model, val_dataloader):
 
     return avg_loss, question_acc, label_acc
 
+
 def train(args, train_dataloader, val_dataloader, model):
 
     # optimizer parameter
@@ -275,7 +277,7 @@ def train(args, train_dataloader, val_dataloader, model):
     print("  Total optimization steps = {}".format(total_lens))
 
     #global_step = 0
-     
+
     #logging_loss = 0.0
     model.zero_grad()
     set_seed()
@@ -327,6 +329,7 @@ def train(args, train_dataloader, val_dataloader, model):
 
     # 最后循环结束 再评估一次
     train_acc = evaluate_and_save_model(args, model, val_dataloader, i, train_acc)
+
 
 def test():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -408,7 +411,7 @@ if __name__ == '__main__':
             "max_seq_length": 128,
             "batch_size": 32,
             "learning_rate": 6e-6,
-            "epochs": 3,
+            "epochs": 5,
             "device": device
     }
 

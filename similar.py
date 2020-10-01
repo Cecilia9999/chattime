@@ -7,6 +7,7 @@ from collections import defaultdict
 from gensim.test.utils import datapath, get_tmpfile
 import os
 
+
 class SentenceSim:
     def __init__(self, seg):
         self.seg = seg
@@ -59,15 +60,20 @@ class SentenceSim:
         # [[sent1 (word0_id, word0_freq),()], [sent2 (), (), ()], [sent3 (), ()] ]
 
         # create similarity matrix
-        # self.index = similarities.MatrixSimilarity(self.corpus)
-
-        if os.path.exists('./chat.index'):
-            self.index = similarities.Similarity.load('./chat.index')
+        print('p1')
+        self.index = similarities.MatrixSimilarity(self.corpus)
+        print('p2')
+        #output_fname = get_tmpfile("/content/gdrive/My Drive/nlpqa3/data/tmp/save_index")
+        #self.index = similarities.Similarity(output_fname, self.corpus, len(self.dicts))
+        #self.index.save('/content/gdrive/My Drive/nlpqa3/data/tmp/save_index')
+        '''
+        if os.path.exists('/content/gdrive/My Drive/nlpqa3/data/chat.index'):
+            self.index = similarities.Similarity.load('/content/gdrive/My Drive/nlpqa3/data/chat.index')
         else:
             output_fname = get_tmpfile("saved_index")
             self.index = similarities.Similarity(output_fname, self.corpus, len(self.dicts))
-            self.index.save('./chat.index')
-        
+            self.index.save('/content/gdrive/My Drive/nlpqa3/data/chat.index')
+        '''
 
     # lsi model 
     def lsi(self):
@@ -81,14 +87,14 @@ class SentenceSim:
         # create similarity matrix
         # self.index = similarities.MatrixSimilarity(self.corpus)
     
-        if os.path.exists('./chat2.index'):
-            self.index = similarities.Similarity.load('./chat2.index')
+        if os.path.exists('/content/gdrive/My Drive/nlpqa3/data/chat2.index'):
+            self.index = similarities.Similarity.load('/content/gdrive/My Drive/nlpqa3/data/chat2.index')
         else:
             output_fname = get_tmpfile("saved_index2")
             #print('p1')
             self.index = similarities.Similarity(output_fname, self.corpus, 200)
             #print('p2')
-            self.index.save('./chat2.index')
+            self.index.save('/content/gdrive/My Drive/nlpqa3/data/chat2.index')
         
 
     # lda model 
@@ -102,13 +108,13 @@ class SentenceSim:
         # create similarity matrix
         #self.index = similarities.MatrixSimilarity(self.corpus)
         if os.path.exists('./chat3.index'):
-            self.index = similarities.Similarity.load('./chat3.index')
+            self.index = similarities.Similarity.load('/content/gdrive/My Drive/nlpqa3/data/chat3.index')
         else:
             output_fname = get_tmpfile("saved_index3")
             print('p1')
             self.index = similarities.Similarity(output_fname, self.corpus, 50)
             print('p2')
-            self.index.save('./chat3.index')
+            self.index.save('/content/gdrive/My Drive/nlpqa3/data/chat3.index')
 
 
     # handle new input sentence
@@ -117,6 +123,7 @@ class SentenceSim:
         # word in current sentence -> bow (= word freq)
         vec_bow = self.dicts.doc2bow(sentence.get_cuted_sentence())
         return self.model[vec_bow]  # apply model to bow, convert bow to vec
+    
     
     # create matrix vec to include all []
     def bow2vec(self):
@@ -131,6 +138,7 @@ class SentenceSim:
             vec.append(sentence_vec) 
             #print('bow2vec: ', vec)
         return vec
+
 
     # get similarity between input sentence and corpus
     def similarity(self, sentence):
@@ -148,6 +156,7 @@ class SentenceSim:
                                            # self.sentences=[list of Sentence object] 
         sentence.set_score(score)          # set this sent's object's score 
         return sentence                    # return an object
+
 
     # get former k similarity between input sentence and corpus
     def similarity_topk(self, sentence, k):
@@ -172,5 +181,3 @@ class SentenceSim:
         return sentences
         '''
         return indices, scores  # return indices cuz it's convenient for search corresponding answers
-
- 
