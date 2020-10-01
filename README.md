@@ -31,8 +31,9 @@ QA chatbot realized by gensim and bert
 - 3 similar.py:   (**Gensim**) compute similarity between input sentence and corpus.
                   offer 3 models:   **tf-idf** / **lsi** / **lda**
                 
-- 4 main.py:      -(1) create inverted index table {'key_word': [qidx0, qidx1]}  
+- 4 recall_main.py:      -(1) create inverted index table {'key_word': [qidx0, qidx1]}  
 				  -(2) for keywords in query, get a list of all qidx, then calc similarity, return: topk candidates (ans, scores), qList, aList (from inverted index table)   
+
 
  				  
 			
